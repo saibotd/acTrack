@@ -1,0 +1,16 @@
+{
+    "name": "saibotd/acTrack",
+    "description": "Minimal time tracking for active.collab",
+    "type": "Application",
+    "license": "Apache 2.0",
+    "authors": [
+        {
+            "name": "Tobias Duehr",
+            "email": "tobiasduehr@gmail.com"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "~6.0",
+        "symfony/console": "^3.0"
+    }
+}
