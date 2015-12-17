@@ -1,4 +1,5 @@
 <?php
+namespace saibotd\acTrack;
 
 class TimeTracker{
     private $startedAt, $secondsPassed, $isTracking;

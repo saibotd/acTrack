@@ -1,4 +1,5 @@
 <?php
+namespace saibotd\acTrack;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Middleware;
@@ -46,7 +47,7 @@ class ActiveCollabClient{
                 $res = $error->getResponse();
                 $data = json_decode($res->getBody());
                 if(isset($data->message)){
-                    throw new Exception($data->message);
+                    throw new \Exception($data->message);
                 }
             }
         }

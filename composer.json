@@ -12,5 +12,10 @@
     "require": {
         "guzzlehttp/guzzle": "~6.0",
         "symfony/console": "^3.0"
+    },
+    "autoload":{
+        "psr-4": {
+            "saibotd\\acTrack\\": "src/"
+        }
     }
 }

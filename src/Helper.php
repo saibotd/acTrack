@@ -1,4 +1,5 @@
 <?php
+namespace saibotd\acTrack;
 
 class Helper{
     public static function format_time($t,$f=':') {

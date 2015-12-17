@@ -1,12 +1,11 @@
 <?php
 
 require 'vendor/autoload.php';
-require 'src/Helper.php';
-require 'src/ACTimeTrackCommand.php';
 
 use Symfony\Component\Console\Application;
+use saibotd\acTrack\ACTimeTrackCommand;
 
-$application = new Application("acTimetrack");
+$application = new Application('acTrack', '@git-commit-short@');
 $command = new ACTimeTrackCommand();
 $application->add($command);
 $application->setDefaultCommand($command->getName());
