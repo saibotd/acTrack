@@ -8,7 +8,7 @@ Command line time-tracking app for active.collab - it's at least as sexy as the 
 
 ## Installation
 
-[Download the compiled .phar file](https://github.com/saibotd/acTrack/tree/master/dist/actrack.phar).
+[Download the compiled .phar file](https://github.com/saibotd/acTrack/raw/master/dist/actrack.phar).
 
 Or clone this repository if you know git and composer.
 
