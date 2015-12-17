@@ -1,16 +1,26 @@
 # acTrack
-Command line time-tracking app for active.collab - it's at least as sexy as the official Win/Mac app.
+Command line time-tracking app for active.collab - it's at least as sexy as the official Win/Mac app ;)
 
 ## Prerequisite
 
 - PHP 5.4+
-- PHP posix module for colors
+- Enable the posix module in your php.ini for colors
+
+## Installation
+
+[Download the compiled .phar file](https://github.com/saibotd/acTrack/tree/master/dist/actrack.phar).
+
+Or clone this repository if you know git and composer.
 
 ## Usage
 
-    ./actrack
+    ./php actrack.phar
 
 Enter your login data for active.collab and follow the on-screen instructions.
+
+If you cloned the repo and pulled the dependencies you may start acTrack like this:
+
+    ./actrack
 
 ## Features missing
 
