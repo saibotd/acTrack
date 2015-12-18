@@ -62,7 +62,7 @@ class ACTimeTrackCommand extends Command{
     }
 
     function workingOnTitle(){
-        if($this->task) return $this->project->name .= ' > ' . $this->task->name;
+        if($this->task) return $this->project->name . ' > ' . $this->task->name;
         else return $this->project->name;
     }
 
@@ -172,10 +172,10 @@ class ACTimeTrackCommand extends Command{
         $options = ["Refresh", "Done", "Abort"];
         if($this->project && $this->timeTracker->isPaused()){
             $options[] = "Continue";
-            $title = '<info>Tracking is paused for "' . $this->workingOnTitle() . '" (' . Helper::format_time($this->timeTracker->getSeconds()) . ')</info>';
+            $title = '<info>Tracking is PAUSED for "' . $this->workingOnTitle() . '" (' . Helper::format_time($this->timeTracker->getSeconds()) . ')</info>';
         } else {
             $options[] = "Pause";
-            $title = '<info>Tracking is running for "' . $this->workingOnTitle() . '" (' . Helper::format_time($this->timeTracker->getSeconds()) . ')</info>';
+            $title = '<info>Tracking is ACTIVE for "' . $this->workingOnTitle() . '" (' . Helper::format_time($this->timeTracker->getSeconds()) . ')</info>';
         }
 
         $question = new ChoiceQuestion($title, $options, 0);

@@ -2,33 +2,34 @@
 namespace saibotd\acTrack;
 
 class TimeTracker{
-    private $startedAt, $secondsPassed, $isTracking;
+    private $secondsPassed = 0, $isTracking = false;
 
     public function start(){
         $this->startedAt = time();
+        $this->setSeconds($this->secondsPassed);
         $this->isTracking = true;
     }
     public function stop(){
         $secondsPassed = $this->getSeconds();
-        $this->startedAt = null;
         $this->secondsPassed = 0;
         $this->isTracking = false;
+        unlink('.seconds');
         return $secondsPassed;
     }
     public function pause(){
         $this->secondsPassed = $this->getSeconds();
-        $this->startedAt = null;
         $this->isTracking = false;
+        unlink('.seconds');
     }
     public function isPaused(){
         return !$this->isTracking;
     }
     public function getSeconds(){
-        if($this->isTracking)
-            return $this->secondsPassed + (time() - $this->startedAt);
-        return $this->secondsPassed;
+        if(!$this->isTracking) return $this->secondsPassed;
+        return file_get_contents('.seconds');
     }
     public function setSeconds($secondsPassed){
         $this->secondsPassed = $secondsPassed;
+        file_put_contents('.seconds', $secondsPassed);
     }
 }
