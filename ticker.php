@@ -1,5 +1,5 @@
 <?php
-unlink('.seconds');
+touch('.tick');
 for(;;){
     if(file_exists('.seconds'))
         file_put_contents('.seconds', intval(file_get_contents('.seconds')) + 1);

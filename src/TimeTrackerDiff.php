@@ -1,35 +1,35 @@
 <?php
 namespace saibotd\acTrack;
+use saibotd\acTrack\TimeTrackerInterface;
 
-class TimeTracker{
-    private $secondsPassed = 0, $isTracking = false;
+class TimeTrackerDiff implements TimeTrackerInterface{
+    private $startedAt, $secondsPassed, $isTracking;
 
     public function start(){
         $this->startedAt = time();
-        $this->setSeconds($this->secondsPassed);
         $this->isTracking = true;
     }
     public function stop(){
         $secondsPassed = $this->getSeconds();
+        $this->startedAt = null;
         $this->secondsPassed = 0;
         $this->isTracking = false;
-        unlink('.seconds');
         return $secondsPassed;
     }
     public function pause(){
         $this->secondsPassed = $this->getSeconds();
+        $this->startedAt = null;
         $this->isTracking = false;
-        unlink('.seconds');
     }
     public function isPaused(){
         return !$this->isTracking;
     }
     public function getSeconds(){
-        if(!$this->isTracking) return $this->secondsPassed;
-        return file_get_contents('.seconds');
+        if($this->isTracking)
+            return $this->secondsPassed + (time() - $this->startedAt);
+        return $this->secondsPassed;
     }
     public function setSeconds($secondsPassed){
         $this->secondsPassed = $secondsPassed;
-        file_put_contents('.seconds', $secondsPassed);
     }
 }

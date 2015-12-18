@@ -6,7 +6,8 @@
     ],
     "files": [
         "LICENSE",
-        "README.md"
+        "README.md",
+        "ticker.php"
     ],
     "finder": [
         {

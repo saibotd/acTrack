@@ -11,7 +11,8 @@ use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Helper\ProgressBar;
 use saibotd\acTrack\ActiveCollabClient;
-use saibotd\acTrack\TimeTracker;
+use saibotd\acTrack\TimeTrackerDiff;
+use saibotd\acTrack\TimeTrackerTick;
 
 class ACTimeTrackCommand extends Command{
     private $acClient, $timeTracker, $session, $tasks, $task, $project, $projects, $companies;
@@ -19,7 +20,10 @@ class ACTimeTrackCommand extends Command{
     public function __construct(){
         parent::__construct();
         $this->acClient = new ActiveCollabClient();
-        $this->timeTracker = new TimeTracker();
+        if(is_file('.tick'))
+            $this->timeTracker = new TimeTrackerTick();
+        else
+            $this->timeTracker = new TimeTrackerDiff();
     }
 
     protected function configure(){
