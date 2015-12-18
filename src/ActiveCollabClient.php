@@ -60,9 +60,14 @@ class ActiveCollabClient{
         return json_decode($res->getBody());
     }
 
+    public function fetchSelfHostedInstances(){
+        $res = $this->client->request('GET', 'https://my.activecollab.com/api/v1/products/self-hosted');
+        return json_decode($res->getBody());
+    }
+
     public function setInstance($instance){
         $this->instance = $instance;
-        $this->base_uri = $instance->name . "/api/v1";
+        $this->base_uri = substr($instance->urls->view, 0, strpos($instance->urls->view, '/acid-auth'));
     }
 
     public function getInstance(){

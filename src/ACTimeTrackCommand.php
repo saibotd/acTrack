@@ -23,7 +23,7 @@ class ACTimeTrackCommand extends Command{
     }
 
     protected function configure(){
-        $this->setName('track')
+        $this->setName('actrack')
             ->setDescription('track time')
             ->addOption(
                 'email',
@@ -63,10 +63,10 @@ class ACTimeTrackCommand extends Command{
 
     function selectInstance(InputInterface $input, OutputInterface $output){
         $helper = $this->getHelper('question');
-        $cloudInstances = $this->acClient->fetchCloudInstances();
+        $allInstances = array_merge($this->acClient->fetchCloudInstances(), $this->acClient->fetchSelfHostedInstances());
 
         $titles = [];
-        foreach ($cloudInstances as $key => $value) {
+        foreach ($allInstances as $key => $value) {
             $titles[] = $value->account_name;
         }
 
@@ -77,7 +77,7 @@ class ACTimeTrackCommand extends Command{
         );
 
         $index = array_search($helper->ask($input, $output, $question), $titles);
-        $this->acClient->setInstance($cloudInstances[$index]);
+        $this->acClient->setInstance($allInstances[$index]);
         $this->acClient->connectInstance();
 
         $output->writeln("Connected to " . $this->acClient->getInstance()->account_name);
