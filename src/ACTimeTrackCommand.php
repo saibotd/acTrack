@@ -61,6 +61,11 @@ class ACTimeTrackCommand extends Command{
         $output->writeln("Login successful, fetching ActiveCollab instances");
     }
 
+    function workingOnTitle(){
+        if($this->task) return $this->project->name .= ' > ' . $this->task->name;
+        else return $this->project->name;
+    }
+
     function selectInstance(InputInterface $input, OutputInterface $output){
         $helper = $this->getHelper('question');
         $allInstances = array_merge($this->acClient->fetchCloudInstances(), $this->acClient->fetchSelfHostedInstances());
@@ -85,43 +90,92 @@ class ACTimeTrackCommand extends Command{
 
     function loadInfo(InputInterface $input, OutputInterface $output){
         $this->session = $this->acClient->fetchSession();
-        $this->tasks = $this->acClient->fetchTasks();
-        $this->projects = $this->acClient->fetchProjects();
         $this->companies = $this->acClient->fetchCompanies();
     }
 
     function selectTask(InputInterface $input, OutputInterface $output){
+        $this->tasks = $this->acClient->fetchTasks();
         $this->project = null;
         $this->task = null;
         $helper = $this->getHelper('question');
 
         $titles = [];
         foreach($this->tasks->tasks as $task){
-            $titles[] = $this->tasks->related->Project->{ $task->project_id }->name . " > " . $task->name;
+            $project = $this->tasks->related->Project->{ $task->project_id };
+            $title = $project->name . " > " . $task->name;
+            if(!$project->is_tracking_enabled) $title .= ' <error>!tracking</error>';
+            $titles[] = $title;
         }
+        $titles[] = "<info>Project list</info>";
         $question = new ChoiceQuestion(
             '<question>Select the task you are working on</question>',
             $titles
         );
 
         $index = array_search($helper->ask($input, $output, $question), $titles);
-        $this->task = $this->tasks->tasks[$index];
-        $this->project = $this->tasks->related->Project->{ $this->task->project_id };
+        if($index != count($titles)-1){
+            $task = $this->tasks->tasks[$index];
+            $project = $this->tasks->related->Project->{ $task->project_id };
+            if($project->is_tracking_enabled){
+                $this->task = $task;
+                $this->project = $project;
 
-        $this->timeTracker->start();
-        $this->trackingIdle($input, $output, $this->acClient);
+                $this->timeTracker->start();
+                $this->trackingIdle($input, $output);
+            } else {
+                $output->writeln("<error>Please enable time tracking for this job first</error>");
+                $this->selectTask();
+            }
+        } else {
+            $this->selectProject($input, $output);
+        }
+        
+    }
+
+    function selectProject(InputInterface $input, OutputInterface $output){
+        $this->projects = $this->acClient->fetchProjects();
+        $this->project = null;
+        $this->task = null;
+        $helper = $this->getHelper('question');
+
+        $titles = [];
+        foreach($this->projects as $project){
+            $title = $project->name;
+            if(!$project->is_tracking_enabled) $title .= ' <error>!tracking</error>';
+            $titles[] = $title;
+        }
+        $titles[] = "<info>Task list</info>";
+        $question = new ChoiceQuestion(
+            '<question>Select the project you are working on</question>',
+            $titles
+        );
+
+        $index = array_search($helper->ask($input, $output, $question), $titles);
+        if($index != count($titles)-1){
+            if($this->projects[$index]->is_tracking_enabled){
+                $this->project = $this->projects[$index];
+                $this->timeTracker->start();
+                $this->trackingIdle($input, $output, $this->acClient);
+            } else {
+                $output->writeln("<error>Please enable time tracking for this job first</error>");
+                $this->selectProject();
+            }
+        } else {
+            $this->selectTask($input, $output);
+        }
+        
     }
 
     function trackingIdle(InputInterface $input, OutputInterface $output){
         $helper = $this->getHelper('question');
 
         $options = ["Refresh", "Done", "Abort"];
-        if($this->task && $this->timeTracker->isPaused()){
+        if($this->project && $this->timeTracker->isPaused()){
             $options[] = "Continue";
-            $title = '<info>Tracking is paused for "' . $this->project->name . ' ' . $this->task->name . '" (' . Helper::format_time($this->timeTracker->getSeconds()) . ')</info>';
+            $title = '<info>Tracking is paused for "' . $this->workingOnTitle() . '" (' . Helper::format_time($this->timeTracker->getSeconds()) . ')</info>';
         } else {
             $options[] = "Pause";
-            $title = '<info>Tracking is running for "' . $this->project->name . ' ' . $this->task->name . '" (' . Helper::format_time($this->timeTracker->getSeconds()) . ')</info>';
+            $title = '<info>Tracking is running for "' . $this->workingOnTitle() . '" (' . Helper::format_time($this->timeTracker->getSeconds()) . ')</info>';
         }
 
         $question = new ChoiceQuestion($title, $options, 0);
@@ -182,12 +236,13 @@ class ACTimeTrackCommand extends Command{
 
         $questionText = "<question>You are about to submit $hours";
         if($billable) $questionText .=  ' billable';
-        $questionText .=  " hours of the type \"$jobType\" on \""  . $this->project->name . ' ' . $this->task->name . '". Is all of this correct?</question> <info>[Y/n]</info>: ' ;
+        $questionText .=  " hours of the type \"$jobType\" on \""  . $this->workingOnTitle() . '". Is all of this correct?</question> <info>[Y/n]</info>: ' ;
 
         $question = new ConfirmationQuestion($questionText, true);
 
         if($helper->ask($input, $output, $question)){
-            $this->acClient->submitTimeRecord($hours, $jobTypeID, date("Y-m-d"), $billable, $this->project->id, $this->task->id, $summary);
+            $task_id = $this->task ? $this->task->id : null;
+            $this->acClient->submitTimeRecord($hours, $jobTypeID, date("Y-m-d"), $billable, $this->project->id, $task_id, $summary);
             $this->selectTask($input, $output);
         } else {
             $this->timeTracker->setSeconds($trackedSeconds);
