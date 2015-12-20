@@ -20,9 +20,8 @@ class ACTimeTrackCommand extends Command{
     public function __construct(){
         parent::__construct();
         $this->acClient = new ActiveCollabClient();
-        if(is_file('.tick'))
-            $this->timeTracker = new TimeTrackerTick();
-        else
+        $this->timeTracker = new TimeTrackerTick();
+        if(!$this->timeTracker->isWorking())
             $this->timeTracker = new TimeTrackerDiff();
     }
 
@@ -128,7 +127,7 @@ class ACTimeTrackCommand extends Command{
                 $this->trackingIdle($input, $output);
             } else {
                 $output->writeln("<error>Please enable time tracking for this job first</error>");
-                $this->selectTask();
+                $this->selectTask($input, $output);
             }
         } else {
             $this->selectProject($input, $output);
@@ -162,7 +161,7 @@ class ACTimeTrackCommand extends Command{
                 $this->trackingIdle($input, $output, $this->acClient);
             } else {
                 $output->writeln("<error>Please enable time tracking for this job first</error>");
-                $this->selectProject();
+                $this->selectProject($input, $output);
             }
         } else {
             $this->selectTask($input, $output);
