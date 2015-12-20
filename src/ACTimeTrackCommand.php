@@ -1,5 +1,5 @@
 <?php
-namespace saibotd\acTrack;
+namespace saibotd\actrack;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -10,9 +10,9 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Helper\ProgressBar;
-use saibotd\acTrack\ActiveCollabClient;
-use saibotd\acTrack\TimeTrackerDiff;
-use saibotd\acTrack\TimeTrackerTick;
+use saibotd\actrack\ActiveCollabClient;
+use saibotd\actrack\TimeTrackerDiff;
+use saibotd\actrack\TimeTrackerTick;
 
 class ACTimeTrackCommand extends Command{
     private $acClient, $timeTracker, $session, $tasks, $task, $project, $projects, $companies;

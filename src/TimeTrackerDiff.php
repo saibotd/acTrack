@@ -1,6 +1,6 @@
 <?php
-namespace saibotd\acTrack;
-use saibotd\acTrack\TimeTrackerInterface;
+namespace saibotd\actrack;
+use saibotd\actrack\TimeTrackerInterface;
 
 class TimeTrackerDiff implements TimeTrackerInterface{
     private $startedAt, $secondsPassed, $isTracking;

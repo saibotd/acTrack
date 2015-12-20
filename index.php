@@ -4,7 +4,7 @@ if(!is_file('vendor/autoload.php')) die("Composer autoloader missing. Did you in
 require 'vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-use saibotd\acTrack\AcTrackApplication;
+use saibotd\actrack\AcTrackApplication;
 
 $application = new AcTrackApplication('acTrack', '@git-commit-short@');
 $application->run();

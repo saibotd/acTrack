@@ -1,5 +1,5 @@
 <?php
-namespace saibotd\acTrack;
+namespace saibotd\actrack;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Middleware;

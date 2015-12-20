@@ -1,9 +1,9 @@
 <?php
-namespace saibotd\acTrack;
+namespace saibotd\actrack;
 
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputInterface;
-use saibotd\acTrack\ACTimeTrackCommand;
+use saibotd\actrack\ACTimeTrackCommand;
 
 class AcTrackApplication extends Application{
     protected function getCommandName(InputInterface $input){

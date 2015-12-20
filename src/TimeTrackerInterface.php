@@ -1,6 +1,6 @@
 <?php
 
-namespace saibotd\acTrack;
+namespace saibotd\actrack;
 
 interface TimeTrackerInterface{
     public function stop();

@@ -1,5 +1,5 @@
 {
-    "name": "saibotd/acTrack",
+    "name": "saibotd/actrack",
     "description": "Minimal time tracking for active.collab",
     "type": "Application",
     "license": "Apache 2.0",
@@ -15,7 +15,8 @@
     },
     "autoload":{
         "psr-4": {
-            "saibotd\\acTrack\\": "src/"
+            "saibotd\\actrack\\": "src/"
         }
-    }
+    },
+    "bin": ["actrack"]
 }

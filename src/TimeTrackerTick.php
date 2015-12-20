@@ -1,6 +1,6 @@
 <?php
-namespace saibotd\acTrack;
-use saibotd\acTrack\TimeTrackerInterface;
+namespace saibotd\actrack;
+use saibotd\actrack\TimeTrackerInterface;
 
 class TimeTrackerTick implements TimeTrackerInterface{
     private $secondsPassed = 0, $isTracking = false, $testFile, $saveFile;
