@@ -23,7 +23,3 @@ If you cloned the repo and pulled the dependencies you may start acTrack like th
 
     ./actrack
 
-## Features missing
-
-- Self-hosted instances
-- Track time on projects, currently only tasks are trackable
