@@ -10,16 +10,19 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Helper\ProgressBar;
-use saibotd\actrack\ActiveCollabClient;
+use ActiveCollab\SDK\Token;
+use ActiveCollab\SDK\TokenInterface;
+use ActiveCollab\SDK\Authenticator\Cloud;
+use ActiveCollab\SDK\Authenticator\SelfHosted;
+use ActiveCollab\SDK\Client;
 use saibotd\actrack\TimeTrackerDiff;
 use saibotd\actrack\TimeTrackerTick;
 
 class ACTimeTrackCommand extends Command{
-    private $acClient, $timeTracker, $session, $tasks, $task, $project, $projects, $companies;
+    private $authenticator, $token, $acClient, $timeTracker, $session, $tasks, $task, $project, $projects, $companies;
 
     public function __construct(){
         parent::__construct();
-        $this->acClient = new ActiveCollabClient();
         $this->timeTracker = new TimeTrackerTick();
         if(!$this->timeTracker->isWorking())
             $this->timeTracker = new TimeTrackerDiff();
@@ -42,8 +45,15 @@ class ACTimeTrackCommand extends Command{
     }
 
     protected function execute(InputInterface $input, OutputInterface $output){
-        $this->login($input, $output);
-        $this->selectInstance($input, $output);
+        if(is_file(sys_get_temp_dir() . '/.actoken')){
+            $actoken = json_decode(file_get_contents(sys_get_temp_dir() . '/.actoken'));
+            $this->token = new \ActiveCollab\SDK\Token($actoken->token, $actoken->url);
+            $output->writeln("Found token, logging you back in");
+            $this->acClient = new Client($this->token);
+        } else {
+            $this->login($input, $output);
+            $this->selectInstance($input, $output);
+        }
         $this->loadInfo($input, $output);
         $this->selectTask($input, $output);
     }
@@ -60,22 +70,22 @@ class ACTimeTrackCommand extends Command{
             $question->setHidden(true);
             $password = $helper->ask($input, $output, $question);
         }
-        $this->acClient->login($email,$password);
+        $this->authenticator = new Cloud('saibotd', 'acClient', $email, $password);
         $output->writeln("Login successful, fetching ActiveCollab instances");
     }
 
     function workingOnTitle(){
-        if($this->task) return $this->project->name . ' > ' . $this->task->name;
-        else return $this->project->name;
+        if($this->task) return $this->project['name'] . ' > ' . $this->task['name'];
+        else return $this->project['name'];
     }
 
     function selectInstance(InputInterface $input, OutputInterface $output){
         $helper = $this->getHelper('question');
-        $allInstances = array_merge($this->acClient->fetchCloudInstances(), $this->acClient->fetchSelfHostedInstances());
+        $instances = array_values($this->authenticator->getAccounts());
 
         $titles = [];
-        foreach ($allInstances as $key => $value) {
-            $titles[] = $value->account_name;
+        foreach ($instances as $key => $value) {
+            $titles[] = $value['name'];
         }
 
         $question = new ChoiceQuestion(
@@ -85,28 +95,36 @@ class ACTimeTrackCommand extends Command{
         );
 
         $index = array_search($helper->ask($input, $output, $question), $titles);
-        $this->acClient->setInstance($allInstances[$index]);
-        $this->acClient->connectInstance();
+        $this->token = $this->authenticator->issueToken($instances[$index]['id']);
+        if ($this->token instanceof TokenInterface) {
+            file_put_contents(sys_get_temp_dir() . '/.actoken', json_encode([
+                'token' => $this->token->getToken(),
+                'url' => $this->token->getUrl()
+            ]));
+        } else {
+            die("Could not get valid token");
+        }
+        $this->acClient = new Client($this->token);
 
-        $output->writeln("Connected to " . $this->acClient->getInstance()->account_name);
+        $output->writeln("Connected to " . $instances[$index]['name']);
     }
 
     function loadInfo(InputInterface $input, OutputInterface $output){
-        $this->session = $this->acClient->fetchSession();
-        $this->companies = $this->acClient->fetchCompanies();
+        $this->session = $this->acClient->get('user-session')->getJson();
+        $this->companies = $this->acClient->get('companies/all')->getJson();
     }
 
     function selectTask(InputInterface $input, OutputInterface $output){
-        $this->tasks = $this->acClient->fetchTasks();
+        $this->tasks = $this->acClient->get('users/'.$this->session['logged_user_id'].'/tasks')->getJson();
         $this->project = null;
         $this->task = null;
         $helper = $this->getHelper('question');
 
         $titles = [];
-        foreach($this->tasks->tasks as $task){
-            $project = $this->tasks->related->Project->{ $task->project_id };
-            $title = $project->name . " > " . $task->name;
-            if(!$project->is_tracking_enabled) $title .= ' <error>!tracking</error>';
+        foreach($this->tasks['tasks'] as $task){
+            $project = $this->tasks['related']['Project'][$task['project_id']];
+            $title = $project['name'] . " > " . $task['name'];
+            if(!$project['is_tracking_enabled']) $title .= ' <error>!tracking</error>';
             $titles[] = $title;
         }
         $titles[] = "<info>Project list</info>";
@@ -117,9 +135,9 @@ class ACTimeTrackCommand extends Command{
 
         $index = array_search($helper->ask($input, $output, $question), $titles);
         if($index != count($titles)-1){
-            $task = $this->tasks->tasks[$index];
-            $project = $this->tasks->related->Project->{ $task->project_id };
-            if($project->is_tracking_enabled){
+            $task = $this->tasks['tasks'][$index];
+            $project = $this->tasks['related']['Project'][$task['project_id']];
+            if($project['is_tracking_enabled']){
                 $this->task = $task;
                 $this->project = $project;
 
@@ -132,19 +150,19 @@ class ACTimeTrackCommand extends Command{
         } else {
             $this->selectProject($input, $output);
         }
-        
+
     }
 
     function selectProject(InputInterface $input, OutputInterface $output){
-        $this->projects = $this->acClient->fetchProjects();
+        $this->projects = $this->acClient->get('projects')->getJson();
         $this->project = null;
         $this->task = null;
         $helper = $this->getHelper('question');
 
         $titles = [];
         foreach($this->projects as $project){
-            $title = $project->name;
-            if(!$project->is_tracking_enabled) $title .= ' <error>!tracking</error>';
+            $title = $project['name'];
+            if(!$project['is_tracking_enabled']) $title .= ' <error>!tracking</error>';
             $titles[] = $title;
         }
         $titles[] = "<info>Task list</info>";
@@ -155,7 +173,7 @@ class ACTimeTrackCommand extends Command{
 
         $index = array_search($helper->ask($input, $output, $question), $titles);
         if($index != count($titles)-1){
-            if($this->projects[$index]->is_tracking_enabled){
+            if($this->projects[$index]['is_tracking_enabled']){
                 $this->project = $this->projects[$index];
                 $this->timeTracker->start();
                 $this->trackingIdle($input, $output, $this->acClient);
@@ -166,7 +184,7 @@ class ACTimeTrackCommand extends Command{
         } else {
             $this->selectTask($input, $output);
         }
-        
+
     }
 
     function trackingIdle(InputInterface $input, OutputInterface $output){
@@ -216,12 +234,12 @@ class ACTimeTrackCommand extends Command{
 
         $titles = [];
         $default = 0;
-        foreach($this->session->job_types as $index => $type){
+        foreach($this->session['job_types'] as $index => $type){
             if($type->is_default){
                 $default = $index;
-                $titles[] = $type->name . "*";
+                $titles[] = $type['name'] . "*";
             } else
-                $titles[] = $type->name;
+                $titles[] = $type['name'];
         }
         $question = new ChoiceQuestion(
             '<question>Select the type of job</question>',
@@ -229,7 +247,7 @@ class ACTimeTrackCommand extends Command{
         );
 
         $jobType = $helper->ask($input, $output, $question);
-        $jobTypeID = $this->session->job_types[array_search($jobType, $titles)]->id;
+        $jobTypeID = $this->session['job_types'][array_search($jobType, $titles)]['id'];
 
         $question = new Question('Summary: ');
         $summary = $helper->ask($input, $output, $question);
@@ -244,8 +262,16 @@ class ACTimeTrackCommand extends Command{
         $question = new ConfirmationQuestion($questionText, true);
 
         if($helper->ask($input, $output, $question)){
-            $task_id = $this->task ? $this->task->id : null;
-            $this->acClient->submitTimeRecord($hours, $jobTypeID, date("Y-m-d"), $billable, $this->project->id, $task_id, $summary);
+            $task_id = $this->task ? $this->task['id'] : null;
+            $res = $this->acClient->post('projects/'.$this->project['id'].'/time-records', [
+                "value" => $hours,
+                "job_type_id" => $jobTypeID,
+                "user_id" => $this->session['logged_user_id'],
+                "record_date" => date('Y-m-d'),
+                "billable_status" => $billable,
+                "summary" => $summary,
+                "task_id" => $task_id
+            ]);
             $this->selectTask($input, $output);
         } else {
             $this->timeTracker->setSeconds($trackedSeconds);
