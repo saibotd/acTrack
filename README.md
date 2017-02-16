@@ -1,5 +1,5 @@
 # acTrack
-Command line time-tracking app for active.collab - it's at least as sexy as the official Win/Mac app ;)
+Command line time-tracking app for active collab.
 
 ## Prerequisite
 
@@ -8,8 +8,7 @@ Command line time-tracking app for active.collab - it's at least as sexy as the 
 
 ## Installation
 
- - [Download the compiled .phar file](https://github.com/saibotd/actrack/raw/master/dist/actrack.phar).
- - (optional) Make it executable `chmod +x actrack.phar`.
+ - Clone this repository, or download it as a zip file
 
 Alternatively, clone this repository if you know your way around git and composer.
 
@@ -22,4 +21,3 @@ Enter your login data for active.collab and follow the on-screen instructions.
 If you cloned the repo and pulled the dependencies you may start acTrack like this:
 
     ./actrack
-
