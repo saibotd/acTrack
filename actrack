@@ -1,4 +1,17 @@
-#!/usr/bin/php
+#!/usr/bin/env php
+
 <?php
+
 error_reporting(E_ERROR | E_PARSE);
-require_once 'index.php';
+
+if (file_exists(__DIR__.'/../../autoload.php')) {
+    require __DIR__.'/../../autoload.php';
+} else {
+    require __DIR__.'/vendor/autoload.php';
+}
+
+use Symfony\Component\Console\Application;
+use saibotd\actrack\AcTrackApplication;
+
+$application = new AcTrackApplication('acTrack', '@git-commit-short@');
+$application->run();

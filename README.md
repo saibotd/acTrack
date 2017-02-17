@@ -3,21 +3,22 @@ Command line time-tracking app for active collab.
 
 ## Prerequisite
 
-- PHP 5.4+
-- Enable the posix module in your php.ini for colors
+- PHP 5.6+
+- Composer
+- (optional) Enable the posix module in your php.ini for nicer colors
 
 ## Installation
 
- - Clone this repository, or download it as a zip file
+Make sure your [global composer bin-folder is in your PATH](https://akrabat.com/global-installation-of-php-tools-with-composer/), then enter
 
-Alternatively, clone this repository if you know your way around git and composer.
+    composer global require saibotd/actrack
+
+to install acTrack. Alternatively, clone this repository or [download it as a zip](https://github.com/saibotd/acTrack/archive/master.zip).
 
 ## Usage
 
-    ./php actrack.phar
+Simply start the app by entering
+
+    actrack
 
 Enter your login data for active.collab and follow the on-screen instructions.
-
-If you cloned the repo and pulled the dependencies you may start acTrack like this:
-
-    ./actrack
